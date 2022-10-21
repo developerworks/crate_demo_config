@@ -1,5 +1,5 @@
 [package]
-name = "crate_config"
+name = "crate_demo_config"
 version = "0.1.0"
 edition = "2021"
 
