@@ -37,6 +37,7 @@ async fn run_client() -> Result<(), Box<dyn Error>> {
     // Good enough for an example to allow server to start
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
+    // - 异步源的 build() 方法后需要跟 .await
     let config = ConfigBuilder::<AsyncState>::default()
         .add_async_source(HttpAsyncSource {
             uri: "https://raw.githubusercontent.com/developerworks/crate_demo_config/main/resources/config.json".into(),
@@ -64,6 +65,9 @@ impl<F: Format + Send + Sync + Debug> AsyncSource for HttpAsyncSource<F> {
     async fn collect(&self) -> Result<Map<String, config::Value>, ConfigError> {
         let client = get_client(true);
 
+        // reqwest::get() 方法会自动调用 ClientBuilder::build() 来构造客户端, 并自动调用 send()
+        // 如果是手动构造 Client, 需要手动 send()
+
         client
             .get(&self.uri)
             .send()
@@ -84,7 +88,7 @@ fn get_client(use_proxy: bool) -> reqwest::Client {
     let client_builder = reqwest::Client::builder();
     if use_proxy {
         let proxy =
-            reqwest::Proxy::https("http://192.168.1.110:1087").expect("tor proxy should be there");
+            reqwest::Proxy::https("http://192.168.1.110:1087").expect("local proxy should be there");
         client_builder
             .proxy(proxy)
             .build()
